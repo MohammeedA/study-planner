@@ -2,7 +2,7 @@
 
 ## Project Structure
 
-```
+```plaintext
 study-planner/
 ├── src/
 │   ├── models/
@@ -114,7 +114,7 @@ pip install -r requirements.txt
 
 ## Dependencies (requirements.txt)
 
-```
+```txt
 python-dateutil>=2.8.2
 pytest>=7.0.0
 ```
