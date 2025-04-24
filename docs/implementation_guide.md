@@ -146,6 +146,7 @@ pytest tests/
 ## Implementation Order
 
 ### Step 1: Project Setup (Day 1)
+
 1. Create project directory structure
 2. Set up virtual environment
 3. Create initial empty files
@@ -153,6 +154,7 @@ pytest tests/
 5. Create requirements.txt with initial dependencies
 
 ### Step 2: Core Models (Days 1-2)
+
 1. Implement Topic class
    - Basic attributes and methods
    - Input validation
@@ -165,6 +167,7 @@ pytest tests/
 4. Test and debug
 
 ### Step 3: Storage System (Days 2-3)
+
 1. Implement FileStorage class
    - JSON serialization/deserialization
    - File handling
@@ -174,6 +177,7 @@ pytest tests/
 4. Add data validation
 
 ### Step 4: CLI Interface (Days 3-4)
+
 1. Create basic command loop
 2. Implement core commands:
    - Add/remove subjects
@@ -185,12 +189,14 @@ pytest tests/
 5. Test user interaction flow
 
 ### Step 5: Basic Scheduler (Days 4-5)
+
 1. Implement simple scheduling algorithm
 2. Add time allocation logic
 3. Create schedule display format
 4. Test scheduling functionality
 
 ### Step 6: Integration and Testing (Day 5)
+
 1. Connect all components
 2. Write integration tests
 3. Add error handling
@@ -198,6 +204,7 @@ pytest tests/
 5. Document usage
 
 ### Step 7: Refinement (Days 5-7)
+
 1. Code cleanup
 2. Performance optimization
 3. Add logging
@@ -206,6 +213,7 @@ pytest tests/
 6. Update documentation
 
 ## Time Allocation
+
 - Project Setup: 0.5 day
 - Core Models: 1.5 days
 - Storage System: 1 day
