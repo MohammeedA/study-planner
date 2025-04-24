@@ -1,4 +1,4 @@
-# StudyPlanner
+# StudyPlanner 📚
 
 A comprehensive study planning tool to help you organize your subjects, track topics, and manage your study schedule effectively.
 
