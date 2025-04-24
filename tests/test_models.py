@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import date
 import unittest
 from src.models.subject import Subject
 from src.models.topic import Topic
