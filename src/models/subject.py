@@ -2,7 +2,7 @@
 Module for the Subject class which represents a study subject.
 """
 
-from datetime import datetime
+from datetime import date
 from .topic import Topic
 
 class Subject:
@@ -19,7 +19,7 @@ class Subject:
     def __init__(
         self,
         name: str,
-        exam_date: datetime.date,
+        exam_date: date,
         difficulty: int = 1
     ) -> None:
         """
@@ -36,7 +36,7 @@ class Subject:
         """
         if not 1 <= difficulty <= 5:
             raise ValueError("Difficulty must be between 1 and 5")
-        if exam_date < datetime.date.today():
+        if exam_date < date.today():
             raise ValueError("Exam date cannot be in the past")
         self.name = name
         self.exam_date = exam_date
