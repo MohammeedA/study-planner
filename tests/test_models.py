@@ -85,5 +85,19 @@ class TestSubject(unittest.TestCase):
         subject.remove_topic(topic)
         self.assertNotIn(topic, subject.topics)
 
+    def test_string_representation(self):
+        """Test the string representation of a Subject"""
+        subject = Subject("Physics", exam_date=date(2025, 5, 15), difficulty=4)
+        expected_str = "Subject: Physics [Exam date: 2025-05-15, Difficulty: 4, Progress: 0.00%, Status: ✗]"
+        self.assertEqual(str(subject), expected_str)
+        
+        # Test with some progress
+        topic = Topic("Mechanics")
+        topic.mark_complete()
+        subject.add_topic(topic)
+        subject.update_progress()
+        expected_str_with_progress = "Subject: Physics [Exam date: 2025-05-15, Difficulty: 4, Progress: 100.00%, Status: ✓]"
+        self.assertEqual(str(subject), expected_str_with_progress)
+
 if __name__ == '__main__':
     unittest.main()

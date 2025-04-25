@@ -92,4 +92,4 @@ class Subject:
             A formatted string showing the subject's properties
         """
         status = "✓" if self.progress == 100 else "✗"
-        return f"Subject: {self.name} [Difficulty: {self.difficulty}, Progress: {self.progress:.2f}%, Status: {status}]"
+        return f"Subject: {self.name} [Exam date: {self.exam_date}, Difficulty: {self.difficulty}, Progress: {self.progress:.2f}%, Status: {status}]"
