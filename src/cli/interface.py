@@ -3,6 +3,7 @@ from datetime import date
 import shlex
 
 from src.models.subject import Subject
+from src.models.topic import Topic
 from src.storage.file_storage import FileStorage, FileStorageError
 
 class CLI(Cmd):
@@ -43,10 +44,6 @@ class CLI(Cmd):
         print("Exiting the Study Scheduler...")
         return super().postloop()
 
-    def do_greet(self, arg):
-        """Greet the user."""
-        print(f"Hello, {arg}!")
-    
     def do_add_subject(self, arg):
         """Add a new subject.
         Usage: add_subject <name> <exam_date> <difficulty>
@@ -164,12 +161,43 @@ class CLI(Cmd):
     
     def do_add_topic(self, arg):
         """Add a new topic to a subject."""
-        # Example implementation
-        print(f"Adding topic: {arg}")
-        # Here you would parse the arg and add the topic to the specified subject
-
-        print(f"Topic '{arg}' added successfully.")
-        # In a real implementation, you would also handle errors and validate input
+        try:
+            while True:
+                self.do_list_subjects("")
+                choice = input("Enter the subject number to add a topic to: ").strip()
+                if choice.isdigit() and 1 <= int(choice) <= len(self.subjects):
+                    index = int(choice) - 1
+                    subject = self.subjects[index]
+                    print(f"Adding topic to '{subject.name}'...")
+                    print("-" * 50)
+                    print(f"Current Topics in '{subject.name}':")
+                    for i, topic in enumerate(subject.topics, 1):
+                        print(f"{i}. {topic.name} [Priority: {topic.priority}, Hours: {topic.estimated_hours}, Completed: {'✓' if topic.completed else '✗'}]")
+                    print("-" * 50)
+                    break
+                else:
+                    print("Invalid choice. Please enter a valid number.")
+            name = input("Enter topic name: ").strip()
+            if not name:
+                print("Error: Topic name cannot be empty")
+                return
+            priority = int(input("Enter topic priority (1-5): ").strip())
+            if not (1 <= priority <= 5):
+                print("Error: Priority must be between 1 and 5")
+                return
+            estimated_hours = float(input("Enter estimated hours: ").strip())
+            if estimated_hours <= 0:
+                print("Error: Estimated hours must be greater than 0")
+                return
+            
+            new_topic = Topic(name, priority, estimated_hours)
+            subject.topics.append(new_topic)
+            print(f"Topic '{name}' added successfully to '{subject.name}'.")
+            subject.update_progress()
+        except ValueError as e:
+            print(f"Error adding topic: {e}")
+        except Exception as e:
+            print(f"Unexpected error: {e}")
         
     def do_list_topics(self, arg):
         """List all topics for a subject."""
