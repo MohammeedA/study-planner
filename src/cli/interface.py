@@ -127,7 +127,7 @@ class CLI(Cmd):
         except Exception as e:
             print(f"Unexpected error: {e}")
     
-    def do_list_subjects(self):
+    def do_list_subjects(self, arg):
         """List all subjects."""
         if not self.subjects:
             print("No subjects found.")
@@ -140,11 +140,12 @@ class CLI(Cmd):
             print(f"   Exam Date: {subject.exam_date}")
             print(f"   Difficulty: {subject.difficulty}/5")
             print(f"   Topics: {len(subject.topics)}")
+            print(f"   Progress: {subject.progress:.2f}%")
             print("-" * 50)
     
     def do_remove_subject(self, arg):
         """Remove a subject."""
-        self.do_list_subjects()
+        self.do_list_subjects("")
         print("Enter the number of the subject to remove:")
         try:
             while True:
@@ -180,12 +181,34 @@ class CLI(Cmd):
     
     def do_remove_topic(self, arg):
         """Remove a topic from a subject."""
-        # Example implementation
-        print(f"Removing topic: {arg}")
-        # Here you would parse the arg and remove the topic from the specified subject
-
-        print(f"Topic '{arg}' removed successfully.")
-        # In a real implementation, you would also handle errors and validate input
+        try:
+            subject = None
+            self.do_list_subjects("")
+            while True:
+                choice = input("Enter the subject number to remove a topic from: ").strip()
+                if choice.isdigit() and 1 <= int(choice) <= len(self.subjects):
+                    index_s = int(choice) - 1
+                    subject = self.subjects[index_s]
+                    break
+                else:
+                    print("Invalid choice. Please enter a valid number.")
+            print(f"Topics in '{subject.name}':")
+            for i, topic in enumerate(subject.topics, 1):
+                print(f"{i}. {topic.name}")
+            while True:
+                choice = input("Enter the number of the topic to remove: ").strip()
+                if choice.isdigit() and 1 <= int(choice) <= len(subject.topics):
+                    index_t = int(choice) - 1
+                    removed_topic = subject.topics.pop(index_t)
+                    print(f"Removed topic: {removed_topic.name}")
+                    subject.update_progress()
+                    break
+                else:
+                    print("Invalid choice. Please enter a valid number.")
+        except IndexError:
+            print("Error: Topic not found. Please try again.")
+        except Exception as e:
+            print(f"Unexpected error: {e}")
     
     def do_mark_complete(self, arg):
         """Mark a topic as complete."""
