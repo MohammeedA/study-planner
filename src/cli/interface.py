@@ -253,12 +253,34 @@ class CLI(Cmd):
     
     def do_mark_complete(self, arg):
         """Mark a topic as complete."""
-        # Example implementation
-        print(f"Marking topic as complete: {arg}")
-        # Here you would parse the arg and mark the topic as complete in the specified subject
-
-        print(f"Topic '{arg}' marked as complete.")
-        # In a real implementation, you would also handle errors and validate input
+        try:
+            while True:
+                self.do_list_subjects("")
+                choice = input("Enter the subject number to list topics: ").strip()
+                if choice.isdigit() and 1 <= int(choice) <= len(self.subjects):
+                    index = int(choice) - 1
+                    subject = self.subjects[index]
+                    print(f"Topics in '{subject.name}':")
+                    for i, topic in enumerate(subject.topics, 1):
+                        print(f"{i}. {topic.name} [Priority: {topic.priority}, Hours: {topic.estimated_hours}, Completed: {'✓' if topic.completed else '✗'}]")
+                    break
+                else:
+                    print("Invalid choice. Please enter a valid number.")
+            while True:
+                choice = input("Enter the number of the topic to mark as complete: ").strip()
+                if choice.isdigit() and 1 <= int(choice) <= len(subject.topics):
+                    index_t = int(choice) - 1
+                    topic = subject.topics[index_t]
+                    topic.mark_complete()
+                    print(f"Marked topic '{topic.name}' as complete.")
+                    subject.update_progress()
+                    break
+                else:
+                    print("Invalid choice. Please enter a valid number.")
+        except IndexError:
+            print("Error: Topic not found. Please try again.")
+        except Exception as e:
+            print(f"Unexpected error: {e}")
 
     def do_exit(self, arg):
         """Exit the CLI."""
