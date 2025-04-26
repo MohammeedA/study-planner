@@ -4,6 +4,7 @@ from src.models.subject import Subject
 from src.models.topic import Topic
 from src.storage.file_storage import FileStorage
 from src.cli.interface import CLI
+import argparse
 
 def generate_test_data():
     # Create subjects with realistic exam dates
@@ -44,21 +45,19 @@ def generate_test_data():
     return storage
 
 def main():
-    # Uncomment the line below to generate test data
-    # generate_test_data()
-    
+    parser = argparse.ArgumentParser(description='Study Planner CLI')
+    parser.add_argument('-i', '--interactive', 
+                       action='store_true',
+                       help='Run in interactive mode')
+    args = parser.parse_args()
+
     # Initialize storage
     storage_instance = FileStorage(Path("data/subjects.json"))
     
     # Load and verify the data
     loaded_subjects = storage_instance.load_subjects()
-    print("\nLoaded Subjects:")
-    for subject in loaded_subjects:
-        print(f"\n{subject}")
-        for topic in subject.topics:
-            print(f"  - {topic}")
-
-    cli = CLI()
+    
+    cli = CLI(interactive=args.interactive)
     cli.subjects = loaded_subjects
     cli.cmdloop()
 

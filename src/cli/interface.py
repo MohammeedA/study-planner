@@ -8,11 +8,12 @@ class CLI(Cmd):
     prompt = 'study-planner> '
     intro = "Welcome to the Study Planner CLI! Type help or ? to list commands."
     
-    def __init__(self):
+    def __init__(self, interactive=False):
         """Initialize the CLI with an empty subjects list."""
         super().__init__()
         self.subjects = []
         self.storage = FileStorage("data/subjects.json")
+        self.interactive = interactive
     
     def preloop(self):
         """Override preloop to customize the startup message."""
@@ -49,13 +50,16 @@ class CLI(Cmd):
         """Add a new subject.
         Usage: add_subject <name> <exam_date> <difficulty>
         Example: add_subject 'Computer Science' 2024-12-31 3
+        Or use: add_subject -i for interactive mode
         """
+        if arg.strip() == "-i" or self.interactive:
+            return self._add_subject_interactive()
+        
         try:
-            # Split the arguments
+            # Original direct input logic
             args = arg.split(" ")
             if len(args) != 3:
                 print("Usage: add_subject <name> <exam_date> <difficulty>")
-                print(args)
                 return
             name = args[0].strip("'\"")
             exam_date = date(*map(int, args[1].split('-')))
@@ -72,6 +76,46 @@ class CLI(Cmd):
             print(f"Subject '{name}' added successfully.")
         except ValueError as e:
             print(f"Error adding subject: {e}")
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+
+    def _add_subject_interactive(self):
+        """Interactive mode for adding subjects"""
+        try:
+            # Get subject name
+            name = input("Enter subject name: ").strip()
+            if not name:
+                print("Error: Subject name cannot be empty")
+                return
+
+            # Get exam date
+            while True:
+                date_str = input("Enter exam date (YYYY-MM-DD): ").strip()
+                try:
+                    exam_date = date(*map(int, date_str.split('-')))
+                    if exam_date < date.today():
+                        print("Error: Exam date cannot be in the past")
+                        continue
+                    break
+                except ValueError:
+                    print("Error: Invalid date format. Please use YYYY-MM-DD")
+
+            # Get difficulty
+            while True:
+                try:
+                    difficulty = int(input("Enter difficulty (1-5): ").strip())
+                    if not (1 <= difficulty <= 5):
+                        print("Error: Difficulty must be between 1 and 5")
+                        continue
+                    break
+                except ValueError:
+                    print("Error: Please enter a number between 1 and 5")
+
+            # Create and add the new subject
+            new_subject = Subject(name, exam_date, difficulty)
+            self.subjects.append(new_subject)
+            print(f"\nSubject '{name}' added successfully!")
+            
         except Exception as e:
             print(f"Unexpected error: {e}")
     
