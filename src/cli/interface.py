@@ -173,11 +173,24 @@ class CLI(Cmd):
         
     def do_list_topics(self, arg):
         """List all topics for a subject."""
-        # Example implementation
-        print(f"Listing topics for subject: {arg}")
-        # Here you would retrieve the topics from the specified subject and print them
-        # For demonstration, we'll just print a placeholder
-        print("1. Data Structures\n2. Algorithms\n3. Operating Systems")
+        try:
+            while True:
+                self.do_list_subjects("")
+                choice = input("Enter the subject number to list topics: ").strip()
+                if choice.isdigit() and 1 <= int(choice) <= len(self.subjects):
+                    index = int(choice) - 1
+                    subject = self.subjects[index]
+                    print(f"Topics in '{subject.name}':")
+                    for i, topic in enumerate(subject.topics, 1):
+                        print(f"{i}. {topic.name} [Priority: {topic.priority}, Hours: {topic.estimated_hours}, Completed: {'✓' if topic.completed else '✗'}]")
+                    print("-" * 50)
+                    break
+                else:
+                    print("Invalid choice. Please enter a valid number.")
+        except IndexError:
+            print("Error: Subject not found. Please try again.")
+        except Exception as e:
+            print(f"Unexpected error: {e}")
     
     def do_remove_topic(self, arg):
         """Remove a topic from a subject."""
