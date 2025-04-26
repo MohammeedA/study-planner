@@ -2,6 +2,6 @@
 Command-line interface for the StudyBuddy application.
 """
 
-from .interface import CommandLineInterface
+from .interface import CLI
 
-__all__ = ['CommandLineInterface']
+__all__ = ['CLI']

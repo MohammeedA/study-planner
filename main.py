@@ -3,6 +3,7 @@ from pathlib import Path
 from src.models.subject import Subject
 from src.models.topic import Topic
 from src.storage.file_storage import FileStorage
+from src.cli.interface import CLI
 
 def generate_test_data():
     # Create subjects with realistic exam dates
@@ -42,8 +43,13 @@ def generate_test_data():
     print(f"Generated test data for {len(subjects)} subjects with {sum(len(s.topics) for s in subjects)} topics")
     return storage
 
-if __name__ == "__main__":
-    storage_instance = generate_test_data()
+def main():
+    # Uncomment the line below to generate test data
+    # generate_test_data()
+    
+    # Initialize storage
+    storage_instance = FileStorage(Path("data/subjects.json"))
+    
     # Load and verify the data
     loaded_subjects = storage_instance.load_subjects()
     print("\nLoaded Subjects:")
@@ -51,3 +57,10 @@ if __name__ == "__main__":
         print(f"\n{subject}")
         for topic in subject.topics:
             print(f"  - {topic}")
+
+    cli = CLI()
+    cli.subjects = loaded_subjects
+    cli.cmdloop()
+
+if __name__ == "__main__":
+    main()

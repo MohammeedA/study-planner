@@ -1,10 +1,12 @@
 from cmd import Cmd
+from datetime import date
 
+from src.models.subject import Subject
 from src.storage.file_storage import FileStorage, FileStorageError
 
 class CLI(Cmd):
-    prompt = 'cli> '
-    intro = "Welcome to the CLI! Type help or ? to list commands."
+    prompt = 'study-planner> '
+    intro = "Welcome to the Study Planner CLI! Type help or ? to list commands."
     
     def __init__(self):
         """Initialize the CLI with an empty subjects list."""
@@ -44,21 +46,49 @@ class CLI(Cmd):
         print(f"Hello, {arg}!")
     
     def do_add_subject(self, arg):
-        """Add a new subject."""
-        # Example implementation
-        print(f"Adding subject: {arg}")
-        # Here you would parse the arg and add the subject to storage
-
-        print(f"Subject '{arg}' added successfully.")
-        # In a real implementation, you would also handle errors and validate input
+        """Add a new subject.
+        Usage: add_subject <name> <exam_date> <difficulty>
+        Example: add_subject 'Computer Science' 2024-12-31 3
+        """
+        try:
+            # Split the arguments
+            args = arg.split(" ")
+            if len(args) != 3:
+                print("Usage: add_subject <name> <exam_date> <difficulty>")
+                print(args)
+                return
+            name = args[0].strip("'\"")
+            exam_date = date(*map(int, args[1].split('-')))
+            difficulty = int(args[2])
+            if not (1 <= difficulty <= 5):
+                print("Difficulty must be between 1 and 5.")
+                return
+            if exam_date < date.today():
+                print("Exam date cannot be in the past.")
+                return
+            # Create a new subject
+            new_subject = Subject(name, exam_date, difficulty)
+            self.subjects.append(new_subject)
+            print(f"Subject '{name}' added successfully.")
+        except ValueError as e:
+            print(f"Error adding subject: {e}")
+        except Exception as e:
+            print(f"Unexpected error: {e}")
     
     def do_list_subjects(self, arg):
         """List all subjects."""
-        # Example implementation
-        print("Listing all subjects...")
-        # Here you would retrieve the subjects from storage and print them
-        # For demonstration, we'll just print a placeholder
-        print("1. Computer Science\n2. Mathematics\n3. Physics")
+        if not self.subjects:
+            print("No subjects found.")
+            return
+        
+        print("\nCurrent Subjects:")
+        print("-" * 50)
+        for i, subject in enumerate(self.subjects, 1):
+            print(f"{i}. {subject.name}")
+            print(f"   Exam Date: {subject.exam_date}")
+            print(f"   Difficulty: {subject.difficulty}/5")
+            print(f"   Topics: {len(subject.topics)}")
+            print("-" * 50)
     
     def do_remove_subject(self, arg):
         """Remove a subject."""
