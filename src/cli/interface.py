@@ -1,5 +1,6 @@
 from cmd import Cmd
 from datetime import date
+import shlex
 
 from src.models.subject import Subject
 from src.storage.file_storage import FileStorage, FileStorageError
@@ -56,24 +57,31 @@ class CLI(Cmd):
             return self._add_subject_interactive()
         
         try:
-            # Original direct input logic
-            args = arg.split(" ")
+            # Parse input handling quoted strings and whitespace
+            args = shlex.split(arg)
+            
             if len(args) != 3:
                 print("Usage: add_subject <name> <exam_date> <difficulty>")
+                print("Example: add_subject 'Computer Science' 2024-12-31 3")
                 return
-            name = args[0].strip("'\"")
+
+            name = args[0]
             exam_date = date(*map(int, args[1].split('-')))
             difficulty = int(args[2])
+
             if not (1 <= difficulty <= 5):
                 print("Difficulty must be between 1 and 5.")
                 return
+                
             if exam_date < date.today():
                 print("Exam date cannot be in the past.")
                 return
+
             # Create a new subject
             new_subject = Subject(name, exam_date, difficulty)
             self.subjects.append(new_subject)
             print(f"Subject '{name}' added successfully.")
+            
         except ValueError as e:
             print(f"Error adding subject: {e}")
         except Exception as e:
@@ -119,7 +127,7 @@ class CLI(Cmd):
         except Exception as e:
             print(f"Unexpected error: {e}")
     
-    def do_list_subjects(self, arg):
+    def do_list_subjects(self):
         """List all subjects."""
         if not self.subjects:
             print("No subjects found.")
@@ -136,12 +144,22 @@ class CLI(Cmd):
     
     def do_remove_subject(self, arg):
         """Remove a subject."""
-        # Example implementation
-        print(f"Removing subject: {arg}")
-        # Here you would parse the arg and remove the subject from storage
-
-        print(f"Subject '{arg}' removed successfully.")
-        # In a real implementation, you would also handle errors and validate input
+        self.do_list_subjects()
+        print("Enter the number of the subject to remove:")
+        try:
+            while True:
+                choice = input("Choice: ").strip()
+                if choice.isdigit() and 1 <= int(choice) <= len(self.subjects):
+                    index = int(choice) - 1
+                    removed_subject = self.subjects.pop(index)
+                    print(f"Removed subject: {removed_subject.name}")
+                    break
+                else:
+                    print("Invalid choice. Please enter a valid number.")
+        except IndexError:
+            print("Error: Subject not found. Please try again.")
+        except Exception as e:
+            print(f"Unexpected error: {e}")
     
     def do_add_topic(self, arg):
         """Add a new topic to a subject."""
