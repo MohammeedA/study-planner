@@ -183,6 +183,11 @@ class CLI(Cmd):
         print("Goodbye!")
         return True
 
+    def do_EOF(self, arg):
+        """Exit on EOF character (Ctrl+D on Mac/Linux, Ctrl+Z on Windows)."""
+        print("\nGoodbye!")
+        return True
+
     def default(self, line):
         print(f"Unknown command: {line}")
         print("Type 'help' for a list of commands.")
