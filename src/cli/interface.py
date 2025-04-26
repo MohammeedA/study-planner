@@ -162,21 +162,56 @@ class CLI(Cmd):
     def do_add_topic(self, arg):
         """Add a new topic to a subject."""
         try:
-            while True:
-                self.do_list_subjects("")
-                choice = input("Enter the subject number to add a topic to: ").strip()
-                if choice.isdigit() and 1 <= int(choice) <= len(self.subjects):
-                    index = int(choice) - 1
-                    subject = self.subjects[index]
-                    print(f"Adding topic to '{subject.name}'...")
-                    print("-" * 50)
-                    print(f"Current Topics in '{subject.name}':")
-                    for i, topic in enumerate(subject.topics, 1):
-                        print(f"{i}. {topic.name} [Priority: {topic.priority}, Hours: {topic.estimated_hours}, Completed: {'✓' if topic.completed else '✗'}]")
-                    print("-" * 50)
-                    break
-                else:
-                    print("Invalid choice. Please enter a valid number.")
+            if arg.strip() == "-i" or self.interactive:
+                return self._add_topic_interactive()
+            # Parse input handling quoted strings and whitespace
+            args = shlex.split(arg)
+            if len(args) != 4:
+                print("Usage: add_topic <subject_number> <name> <priority> <estimated_hours>")
+                print("Example: add_topic 1 'Data Structures' 3 5.0")
+                return
+            subject_index = int(args[0]) - 1
+            name = args[1]
+            priority = int(args[2])
+            estimated_hours = float(args[3])
+            if not (1 <= priority <= 5):
+                print("Priority must be between 1 and 5.")
+                return
+            if estimated_hours <= 0:
+                print("Estimated hours must be greater than 0.")
+                return
+            if subject_index < 0 or subject_index >= len(self.subjects):
+                print("Invalid subject number.")
+                return
+            subject = self.subjects[subject_index]
+            new_topic = Topic(name, priority, estimated_hours)
+            subject.topics.append(new_topic)
+            print(f"Topic '{name}' added successfully to '{subject.name}'.")
+            subject.update_progress()
+        except IndexError:
+            print("Error: Subject not found. Please try again.")
+        except TypeError:
+            print("Error: Invalid input type. Please check your inputs.")
+        except ValueError as e:
+            print(f"Error adding topic: {e}")
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            
+    def _add_topic_interactive(self):
+        while True:
+            self.do_list_subjects("")
+            choice = input("Enter the subject number to add a topic to: ").strip()
+            if choice.isdigit() and 1 <= int(choice) <= len(self.subjects):
+                index = int(choice) - 1
+                subject = self.subjects[index]
+                print(f"Adding topic to '{subject.name}'...")
+                print("-" * 50)
+                print(f"Current Topics in '{subject.name}':")
+                for i, topic in enumerate(subject.topics, 1):
+                    print(f"{i}. {topic.name} [Priority: {topic.priority}, Hours: {topic.estimated_hours}, Completed: {'✓' if topic.completed else '✗'}]")
+                print("-" * 50)
+            else:
+                print("Invalid choice. Please enter a valid number.")
             name = input("Enter topic name: ").strip()
             if not name:
                 print("Error: Topic name cannot be empty")
@@ -194,10 +229,8 @@ class CLI(Cmd):
             subject.topics.append(new_topic)
             print(f"Topic '{name}' added successfully to '{subject.name}'.")
             subject.update_progress()
-        except ValueError as e:
-            print(f"Error adding topic: {e}")
-        except Exception as e:
-            print(f"Unexpected error: {e}")
+            break
+            
         
     def do_list_topics(self, arg):
         """List all topics for a subject."""
