@@ -52,9 +52,9 @@ def main():
     args = parser.parse_args()
 
     # Initialize storage
-    #storage_instance = FileStorage(Path("data/subjects.json"))
+    storage_instance = FileStorage(Path("data/subjects.json"))
     # Initialize storage with test data
-    storage_instance = generate_test_data()
+    #storage_instance = generate_test_data()
     
     # Load and verify the data
     loaded_subjects = storage_instance.load_subjects()

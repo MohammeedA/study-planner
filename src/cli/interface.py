@@ -33,6 +33,11 @@ class CLI(Cmd):
     def postloop(self):
         """Override postloop to customize the shutdown message."""
         try:
+            if not self.subjects:
+                print("No subjects to save.")
+                self.storage.save_subjects([])
+                print("Saved an empty list of subjects.")
+                return
             # Assuming self.subjects contains the subjects data
             self.storage.save_subjects(self.subjects)
             print(f"Saved {len(self.subjects)} subjects.")

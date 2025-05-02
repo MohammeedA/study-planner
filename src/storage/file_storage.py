@@ -15,7 +15,9 @@ class FileStorage:
      
     def save_subjects(self, subjects: List[Subject]) -> None:
         if not subjects:
-            raise ValueError("The list of subjects is empty.")
+            with self.file_path.open('w', encoding='utf-8') as file:
+                json.dump([], file, indent=2)
+            #raise ValueError("The list of subjects is empty.")
         try:
             data = []
             for subject in subjects:
