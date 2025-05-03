@@ -41,12 +41,20 @@ class TestTopic(unittest.TestCase):
     def test_string_representation(self):
         """Test the string representation of a Topic"""
         topic = Topic("English", priority=4, estimated_hours=3.0)
-        expected_str = "Topic: English [Priority: 4, Hours: 3.0, ✗]"
+        expected_str = "Topic: English [Priority: 4, Progress: 0.0%, Hours: 0.0/3.0, ✗]"
         self.assertEqual(str(topic), expected_str)
         
         topic.mark_complete()
-        expected_str_completed = "Topic: English [Priority: 4, Hours: 3.0, ✓]"
+        expected_str_completed = "Topic: English [Priority: 4, Progress: 100.0%, Hours: 3.0/3.0, ✓]"
         self.assertEqual(str(topic), expected_str_completed)
+
+    def test_reset_progress(self):
+        """Test resetting topic progress"""
+        topic = Topic("Computer Science", priority=4, estimated_hours=5.0)
+        topic.add_hours(3.0)
+        topic.reset_progress()
+        self.assertEqual(topic.hours_spent, 0.0)
+        self.assertFalse(topic.completed)
 
 class TestSubject(unittest.TestCase):
     def test_valid_subject_creation(self):
@@ -84,6 +92,29 @@ class TestSubject(unittest.TestCase):
         subject.add_topic(topic)
         subject.remove_topic(topic)
         self.assertNotIn(topic, subject.topics)
+
+    def test_reset_subject_progress(self):
+        """Test resetting all topics' progress in a subject"""
+        subject = Subject("Computer Science", exam_date=date(2025, 12, 1))
+        topic1 = Topic("Data Structures", priority=5, estimated_hours=10)
+        topic2 = Topic("Algorithms", priority=4, estimated_hours=8)
+        
+        # Add some progress
+        topic1.add_hours(5)
+        topic2.mark_complete()
+        
+        subject.add_topic(topic1)
+        subject.add_topic(topic2)
+        
+        # Reset progress
+        subject.reset_progress()
+        
+        # Verify all topics are reset
+        self.assertEqual(subject.topics[0].hours_spent, 0.0)
+        self.assertFalse(subject.topics[0].completed)
+        self.assertEqual(subject.topics[1].hours_spent, 0.0)
+        self.assertFalse(subject.topics[1].completed)
+        self.assertEqual(subject.progress, 0.0)
 
     def test_string_representation(self):
         """Test the string representation of a Subject"""

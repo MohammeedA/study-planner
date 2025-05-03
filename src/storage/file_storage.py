@@ -75,7 +75,8 @@ class FileStorage:
                     "name": topic.name,
                     "priority": topic.priority,
                     "estimated_hours": topic.estimated_hours,
-                    "completed": topic.completed
+                    "completed": topic.completed,
+                    "hours_spent": topic.hours_spent
                 }
                 for topic in subject.topics
             ]
@@ -110,6 +111,9 @@ class FileStorage:
                     priority=topic_data["priority"],
                     estimated_hours=topic_data["estimated_hours"]
                 )
+                # Restore hours spent from saved data
+                if "hours_spent" in topic_data:
+                    topic.hours_spent = topic_data["hours_spent"]
                 if topic_data["completed"]:
                     topic.mark_complete()
                 subject.add_topic(topic)

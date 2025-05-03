@@ -84,6 +84,12 @@ class Subject:
         completed_topics = sum(1 for topic in self.topics if topic.completed)
         self.progress = (completed_topics / len(self.topics)) * 100
     
+    def reset_progress(self) -> None:
+        """Reset progress for all topics in the subject."""
+        for topic in self.topics:
+            topic.reset_progress()
+        self.update_progress()
+    
     def __str__(self) -> str:
         """
         Return a string representation of the Subject.

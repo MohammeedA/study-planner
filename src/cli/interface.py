@@ -5,6 +5,7 @@ import shlex
 from src.models.subject import Subject
 from src.models.topic import Topic
 from src.storage.file_storage import FileStorage, FileStorageError
+from src.controllers.scheduler import Scheduler
 
 class CLI(Cmd):
     prompt = 'study-planner> '
@@ -16,12 +17,14 @@ class CLI(Cmd):
         self.subjects = []
         self.storage = FileStorage("data/subjects.json")
         self.interactive = interactive
-    
+        self.scheduler = None
+
     def preloop(self):
         """Override preloop to customize the startup message."""
         print("Starting the Study Scheduler...")
         try:
             self.subjects = self.storage.load_subjects()
+            self.scheduler = Scheduler(self.subjects)
             print(f"Loaded {len(self.subjects)} subjects.")
         except FileStorageError as e:
             print(f"Error loading subjects: {e}")
@@ -248,7 +251,7 @@ class CLI(Cmd):
                     subject = self.subjects[index]
                     print(f"Topics in '{subject.name}':")
                     for i, topic in enumerate(subject.topics, 1):
-                        print(f"{i}. {topic.name} [Priority: {topic.priority}, Hours: {topic.estimated_hours}, Completed: {'✓' if topic.completed else '✗'}]")
+                        print(f"{i}. {topic.name} [Priority: {topic.priority}, Hours: {topic.hours_spent}/{topic.estimated_hours}, Progress: {topic.get_progress():.1f}%, Completed: {'✓' if topic.completed else '✗'}]")
                     print("-" * 50)
                     break
                 else:
@@ -319,6 +322,205 @@ class CLI(Cmd):
             print("Error: Topic not found. Please try again.")
         except Exception as e:
             print(f"Unexpected error: {e}")
+
+    def do_reset_topic(self, arg):
+        """Reset progress for a specific topic."""
+        try:
+            while True:
+                self.do_list_subjects("")
+                choice = input("Enter the subject number to list topics: ").strip()
+                if choice.isdigit() and 1 <= int(choice) <= len(self.subjects):
+                    index = int(choice) - 1
+                    subject = self.subjects[index]
+                    print(f"Topics in '{subject.name}':")
+                    for i, topic in enumerate(subject.topics, 1):
+                        print(f"{i}. {topic}")
+                    break
+                else:
+                    print("Invalid choice. Please enter a valid number.")
+            while True:
+                choice = input("Enter the number of the topic to reset: ").strip()
+                if choice.isdigit() and 1 <= int(choice) <= len(subject.topics):
+                    index_t = int(choice) - 1
+                    topic = subject.topics[index_t]
+                    topic.reset_progress()
+                    print(f"Reset progress for topic '{topic.name}'.")
+                    subject.update_progress()
+                    break
+                else:
+                    print("Invalid choice. Please enter a valid number.")
+        except IndexError:
+            print("Error: Topic not found. Please try again.")
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+
+    def do_reset_subject(self, arg):
+        """Reset progress for all topics in a subject."""
+        try:
+            while True:
+                self.do_list_subjects("")
+                choice = input("Enter the subject number to reset all topics: ").strip()
+                if choice.isdigit() and 1 <= int(choice) <= len(self.subjects):
+                    index = int(choice) - 1
+                    subject = self.subjects[index]
+                    confirm = input(f"Are you sure you want to reset all topics in '{subject.name}'? (y/n): ").lower()
+                    if confirm == 'y':
+                        subject.reset_progress()
+                        print(f"Reset progress for all topics in '{subject.name}'.")
+                    else:
+                        print("Operation cancelled.")
+                    break
+                else:
+                    print("Invalid choice. Please enter a valid number.")
+        except IndexError:
+            print("Error: Subject not found. Please try again.")
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+
+    def do_view_schedule(self, arg):
+        """View study schedule for the next N days.
+        Usage: view_schedule [days]
+        Example: view_schedule 7
+        Default is 7 days if no argument is provided.
+        """
+        try:
+            days = 7  # default value
+            if arg.strip():
+                days = int(arg)
+                if days <= 0:
+                    print("Number of days must be positive.")
+                    return
+
+            if not self.subjects:
+                print("No subjects found. Add some subjects first.")
+                return
+
+            schedule = self.scheduler.get_next_days_schedule(days)
+            
+            if not schedule:
+                print("No study activities scheduled for this period.")
+                return
+
+            print(f"\nStudy Schedule for the Next {days} Days:")
+            print("-" * 60)
+            
+            for day in schedule:
+                date_str = day["date"].strftime("%A, %B %d, %Y")
+                print(f"\n{date_str}")
+                print("-" * 40)
+                
+                total_hours = sum(topic["hours"] for topic in day["topics"])
+                
+                for topic in day["topics"]:
+                    print(f"• {topic['subject']} - {topic['topic']}")
+                    print(f"  Hours: {topic['hours']:.1f}, Priority: {topic['priority']}, Remaining after today: {topic['remaining_hours']:.1f}")
+                
+                print(f"\nTotal study hours for {day['date']}: {total_hours:.1f}")
+                print("-" * 40)
+
+        except ValueError:
+            print("Please enter a valid number of days.")
+        except Exception as e:
+            print(f"Error displaying schedule: {e}")
+
+    def do_daily_schedule(self, arg):
+        """View today's study schedule.
+        Usage: daily_schedule
+        """
+        try:
+            if not self.subjects:
+                print("No subjects found. Add some subjects first.")
+                return
+
+            schedule = self.scheduler.create_schedule()
+            
+            if not schedule:
+                print("No study activities scheduled for today.")
+                return
+
+            today = date.today()
+            today_schedule = next((day for day in schedule if day["date"] == today), None)
+            
+            if not today_schedule:
+                print("No study activities scheduled for today.")
+                return
+
+            print("\nToday's Study Schedule:")
+            print("-" * 40)
+            
+            total_hours = sum(topic["hours"] for topic in today_schedule["topics"])
+            
+            for i, topic in enumerate(today_schedule["topics"], 1):
+                print(f"\n{i}. {topic['subject']} - {topic['topic']}")
+                print(f"  Suggested Hours: {topic['hours']:.1f}, Priority: {topic['priority']}")
+                print(f"  Hours remaining after today: {topic['remaining_hours']:.1f}")
+            
+            print(f"\nTotal suggested study hours today: {total_hours:.1f}")
+            print("-" * 40)
+
+        except Exception as e:
+            print(f"Error displaying today's schedule: {e}")
+
+    def do_complete_day(self, arg):
+        """Complete today's study activities by logging actual hours spent.
+        Usage: complete_day
+        """
+        try:
+            if not self.subjects:
+                print("No subjects found. Add some subjects first.")
+                return
+
+            schedule = self.scheduler.create_schedule()
+            if not schedule:
+                print("No study activities scheduled.")
+                return
+
+            today = date.today()
+            today_schedule = next((day for day in schedule if day["date"] == today), None)
+            
+            if not today_schedule:
+                print("No study activities scheduled for today.")
+                return
+
+            print("\nToday's Study Activities:")
+            print("-" * 40)
+            
+            for i, scheduled_topic in enumerate(today_schedule["topics"], 1):
+                subject = next(s for s in self.subjects if s.name == scheduled_topic["subject"])
+                topic = next(t for t in subject.topics if t.name == scheduled_topic["topic"])
+                
+                print(f"\n{i}. {scheduled_topic['subject']} - {scheduled_topic['topic']}")
+                print(f"  Suggested Hours: {scheduled_topic['hours']:.1f}")
+                
+                while True:
+                    try:
+                        hours_input = input(f"  Enter actual hours spent (or press Enter to skip): ").strip()
+                        if not hours_input:
+                            print("  Skipped.")
+                            break
+                            
+                        hours = float(hours_input)
+                        if hours < 0:
+                            print("  Hours cannot be negative.")
+                            continue
+                            
+                        topic.add_hours(hours)
+                        if topic.hours_spent >= topic.estimated_hours:
+                            completed = input("  Topic hours completed. Mark as complete? (y/n): ").lower()
+                            if completed == 'y':
+                                topic.mark_complete()
+                                print(f"  Marked {topic.name} as complete.")
+                        
+                        subject.update_progress()
+                        break
+                        
+                    except ValueError:
+                        print("  Please enter a valid number.")
+
+            print("\nDay completed! Progress has been saved.")
+            
+        except Exception as e:
+            print(f"Error completing day: {e}")
 
     def do_exit(self, arg):
         """Exit the CLI."""

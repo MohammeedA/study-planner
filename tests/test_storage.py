@@ -21,7 +21,7 @@ def fixture_sample_subject():
     """Create a sample subject with topics for testing."""
     subject = Subject(
         name="Mathematics",
-        exam_date=date(2025, 5, 1),
+        exam_date=date(2025, 12, 31),  # Using end of year to avoid date conflicts
         difficulty=4
     )
     topic1 = Topic(name="Calculus", priority=5, estimated_hours=10)
@@ -51,10 +51,11 @@ class TestFileStorage:
         assert len(loaded_subject.topics) == len(test_subject.topics)
 
     def test_save_empty_subjects_list(self, temp_file):
-        """Test that saving an empty subjects list raises ValueError."""
+        """Test that saving an empty subjects list works."""
         storage = FileStorage(temp_file)
-        with pytest.raises(ValueError, match="list of subjects is empty"):
-            storage.save_subjects([])
+        storage.save_subjects([])  # Should save an empty list without error
+        loaded = storage.load_subjects()
+        assert loaded == []  # Should load back as empty list
 
     def test_load_nonexistent_file(self, temp_file):
         """Test loading from a non-existent file returns empty list."""
@@ -75,6 +76,19 @@ class TestFileStorage:
         storage = FileStorage(temp_file)
         with pytest.raises(FileStorageError):
             storage.load_subjects()
+
+    def test_hours_spent_persistence(self, temp_file, test_subject):
+        """Test that hours_spent is saved and loaded correctly."""
+        storage = FileStorage(temp_file)
+        
+        # Add some hours to a topic
+        test_subject.topics[0].add_hours(2.5)
+        storage.save_subjects([test_subject])
+        
+        # Load and verify hours are preserved
+        loaded_subjects = storage.load_subjects()
+        loaded_topic = loaded_subjects[0].topics[0]
+        assert loaded_topic.hours_spent == 2.5
 
     def test_serialize_subject(self, test_subject):
         """Test subject serialization."""

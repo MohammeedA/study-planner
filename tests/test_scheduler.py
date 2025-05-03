@@ -28,6 +28,72 @@ class TestScheduler(unittest.TestCase):
         self.subjects = [self.math, self.physics]
         self.scheduler = Scheduler(self.subjects)
         
+    def test_sequential_topic_scheduling(self):
+        """Test that topics are scheduled in sequential order."""
+        schedule = self.scheduler.create_schedule(start_date=self.start_date)
+        
+        # Track which topics have been scheduled for each subject
+        math_topics_seen = set()
+        physics_topics_seen = set()
+        
+        for day in schedule:
+            for topic in day["topics"]:
+                if topic["subject"] == "Mathematics":
+                    math_topics_seen.add(topic["topic"])
+                    # Should not see Algebra until Calculus is complete
+                    if "Algebra" in math_topics_seen:
+                        self.assertIn("Calculus", math_topics_seen)
+                elif topic["subject"] == "Physics":
+                    physics_topics_seen.add(topic["topic"])
+                    # Should not see Thermodynamics until Mechanics is complete
+                    if "Thermodynamics" in physics_topics_seen:
+                        self.assertIn("Mechanics", physics_topics_seen)
+                        
+    def test_hours_tracking(self):
+        """Test that hours are tracked and topics are completed appropriately."""
+        schedule = self.scheduler.create_schedule(start_date=self.start_date)
+        
+        # Calculate total scheduled hours for first topic of each subject
+        math_hours = sum(
+            t["hours"] for day in schedule 
+            for t in day["topics"] 
+            if t["subject"] == "Mathematics" and t["topic"] == "Calculus"
+        )
+        physics_hours = sum(
+            t["hours"] for day in schedule 
+            for t in day["topics"] 
+            if t["subject"] == "Physics" and t["topic"] == "Mechanics"
+        )
+        
+        # Check that scheduled hours match or exceed estimated hours
+        self.assertGreaterEqual(math_hours, 10)  # Calculus estimated hours
+        self.assertGreaterEqual(physics_hours, 6)  # Mechanics estimated hours
+        
+    def test_topic_completion(self):
+        """Test that topics are marked complete when all hours are scheduled."""
+        schedule = self.scheduler.create_schedule(start_date=self.start_date)
+        
+        # Simulate studying according to schedule
+        for day in schedule:
+            for topic_schedule in day["topics"]:
+                subject = next(s for s in self.subjects if s.name == topic_schedule["subject"])
+                topic = next(t for t in subject.topics if t.name == topic_schedule["topic"])
+                if not topic.completed:
+                    topic.add_hours(topic_schedule["hours"])
+                    
+        # Check that first topics are completed before second topics appear
+        math_first_topic = self.math.topics[0]
+        physics_first_topic = self.physics.topics[0]
+        
+        self.assertTrue(
+            math_first_topic.completed or 
+            math_first_topic.hours_spent == math_first_topic.estimated_hours
+        )
+        self.assertTrue(
+            physics_first_topic.completed or 
+            physics_first_topic.hours_spent == physics_first_topic.estimated_hours
+        )
+                
     def test_create_schedule(self):
         """Test that create_schedule returns a valid schedule."""
         schedule = self.scheduler.create_schedule(start_date=self.start_date)
@@ -49,6 +115,7 @@ class TestScheduler(unittest.TestCase):
                 self.assertIn("topic", topic)
                 self.assertIn("hours", topic)
                 self.assertIn("priority", topic)
+                self.assertIn("is_current", topic)
                 
     def test_get_next_days_schedule(self):
         """Test getting schedule for next N days."""
